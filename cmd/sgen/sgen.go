@@ -46,8 +46,8 @@ import "github.com/rtjhie/sgen"
 
 type {{ . }} struct{}
 
-func ({{ . }}) Fields() []*sgen.Field {
-	return []*sgen.Field{
+func ({{ . }}) Fields() []sgen.Field {
+	return []sgen.Field{
 		// ** Define fields here **
 	}
 }
