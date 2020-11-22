@@ -3,11 +3,17 @@ package sgen
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"go/format"
 	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
 
+	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 )
 
@@ -18,7 +24,6 @@ type (
 
 // Generate writes Go source code for models, json files for JSON schemas, and embeds the json files as binary data.
 func Generate(schemaPath string, cfg *Config, options ...Option) (err error) {
-	// prepare env
 	domain, err := loadDomain(schemaPath)
 	if err != nil {
 		return err
@@ -96,7 +101,47 @@ func (d *Domain) generate() error {
 
 func loadDomain(schemaPath string) (*Domain, error) {
 	// TODO: generate main.go from main.tmpl then run it
-	out, err := run("./tmp/main.go")
+	pkgs, err := packages.Load(&packages.Config{Mode: packages.LoadSyntax}, schemaPath)
+	if err != nil {
+		return nil, err
+	}
+	if len(pkgs) != 1 {
+		return nil, errors.New("cannot resolve package from schema path")
+	}
+	pkgPath := pkgs[0].PkgPath
+	filePath, err := filepath.Abs(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+	files, err := ioutil.ReadDir(filePath)
+	if err != nil {
+		return nil, err
+	}
+	var names []string
+	for _, f := range files {
+		names = append(names, pascal(strings.Trim(f.Name(), ".go")))
+	}
+	b := bytes.NewBuffer(nil)
+	err = templates.ExecuteTemplate(b, "main", struct {
+		Pkg   string
+		Names []string
+	}{pkgPath, names})
+	if err != nil {
+		return nil, fmt.Errorf("execute template: %v", err)
+	}
+	buf, err := format.Source(b.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("format template: %v", err)
+	}
+	if err := os.MkdirAll(".sgen", os.ModePerm); err != nil {
+		return nil, err
+	}
+	target := fmt.Sprintf(".sgen/%s.go", filename(filePath))
+	if err := ioutil.WriteFile(target, buf, 0644); err != nil {
+		return nil, fmt.Errorf("write file %s: %v", target, err)
+	}
+	defer os.RemoveAll(".sgen")
+	out, err := run(target)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +170,6 @@ func run(target string) (string, error) {
 
 func bindata(o, pkg, dir string) (string, error) {
 	cmd := exec.Command("go", "run", "github.com/go-bindata/go-bindata/go-bindata", "-o="+o, "-pkg="+pkg, dir)
-	fmt.Println(cmd.Args)
 	stderr := bytes.NewBuffer(nil)
 	stdout := bytes.NewBuffer(nil)
 	cmd.Stderr = stderr
@@ -134,4 +178,9 @@ func bindata(o, pkg, dir string) (string, error) {
 		return "", fmt.Errorf("bindata: %s", stderr)
 	}
 	return stdout.String(), nil
+}
+
+func filename(pkg string) string {
+	name := strings.Replace(pkg, "/", "_", -1)
+	return fmt.Sprintf("entc_%s_%d", name, time.Now().Unix())
 }

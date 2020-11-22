@@ -4,12 +4,28 @@
 package sgen
 
 type {{ $.Name }} struct {
-    ID string `json:"id"`
+    ID string `json:"_id"`
 {{- range $_, $f := $.Fields }}
-    {{ pascal $f.Name }} string `json:"{{ snake $f.Name }}"`
+    {{- if eq $f.Type.String "object" }}
+        {{ pascal $f.Name }} {{ $f.Subschema.Name }} `json:"{{ snake $f.Name }}"`
+    {{- else }}
+        {{ pascal $f.Name }} {{ $f.Type.String }} `json:"{{ snake $f.Name }}"`
+    {{- end }}
 {{- end }}
 }
 
+{{range $_, $s := $.Subschemas }}
+    type {{ $s.Name }} struct {
+    {{- range $_, $f := $s.Fields }}
+        {{- if eq $f.Type.String "object" }}
+            {{ pascal $f.Name }} {{ $f.Subschema.Name }} `json:"{{ snake $f.Name }}"`
+        {{- else }}
+            {{ pascal $f.Name }} {{ $f.Type.String }} `json:"{{ snake $f.Name }}"`
+        {{- end }}
+    {{- end }}
+    }
+
+{{end }}
 func ({{ $.Name }}) JSONSchema() []byte {
     return binjson.MustAsset("json/{{ snake $.Name }}.json")
 }

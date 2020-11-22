@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
+	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/go-openapi/inflect v0.19.0
 	github.com/iancoleman/orderedmap v0.1.0
 	github.com/kr/pretty v0.1.0 // indirect

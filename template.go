@@ -6,7 +6,7 @@ import (
 	"github.com/rtjhie/sgen/internal/bintmpl"
 )
 
-//go:generate go run github.com/go-bindata/go-bindata/go-bindata -o=internal/bintmpl/bintmpl.go -pkg=bintmpl -modtime=1 ./schema.go ./template/...
+//go:generate go run github.com/go-bindata/go-bindata/go-bindata -o=internal/bintmpl/bintmpl.go -pkg=bintmpl -modtime=1 ./template/...
 
 var (
 	templates = template.New("templates")

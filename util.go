@@ -107,3 +107,11 @@ func ruleset() *inflect.Ruleset {
 	}
 	return rules
 }
+
+func list(args ...interface{}) []interface{} {
+	return args
+}
+
+func _append(l []interface{}, arg interface{}) []interface{} {
+	return append(l, arg)
+}
