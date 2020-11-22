@@ -1,0 +1,13 @@
+
+{{ define "model" }}
+
+package sgen
+
+type {{ $.Name }} struct {
+    ID string
+    {{- range $_, $f := $.Fields }}
+        {{ $f.StructField }} {{ $f.GoType }} `json:"{{ snake $f.Name }}"`
+    {{- end }}
+}
+
+{{ end }}
