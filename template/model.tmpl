@@ -4,10 +4,15 @@
 package sgen
 
 type {{ $.Name }} struct {
-    ID string
-    {{- range $_, $f := $.Fields }}
-        {{ $f.StructField }} {{ $f.GoType }} `json:"{{ snake $f.Name }}"`
-    {{- end }}
+    ID string `json:"id"`
+{{- range $_, $f := $.Fields }}
+    {{ pascal $f.Name }} string `json:"{{ snake $f.Name }}"`
+{{- end }}
 }
+
+func ({{ $.Name }}) JSONSchema() []byte {
+    return binjson.MustAsset("json/{{ snake $.Name }}.json")
+}
+
 
 {{ end }}

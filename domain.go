@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"strings"
+
+	"golang.org/x/tools/imports"
 )
 
 type (
@@ -43,10 +45,10 @@ func (d *Domain) generate() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile("domain.json", dst.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
+	// err = ioutil.WriteFile("domain.json", dst.Bytes(), 0644)
+	// if err != nil {
+	// 	return err
+	// }
 	for _, s := range d.Schemas {
 		j := NewJSONSchema(s)
 		jsonb, err := json.Marshal(j)
@@ -60,17 +62,41 @@ func (d *Domain) generate() error {
 			return err
 		}
 	}
-	_, err = bindata(".")
+	_, err = bindata("internal/binjson/binjson.go", "binjson", "./json")
 	if err != nil {
 		return err
 	}
-	// go code
+
+	w := bytes.NewBuffer(nil)
+	for _, s := range d.Schemas {
+		err = templates.ExecuteTemplate(w, "model", s)
+		if err != nil {
+			return err
+		}
+		path := snake(s.Name) + ".go"
+		err = ioutil.WriteFile(path, w.Bytes(), 0644)
+		if err != nil {
+			return err
+		}
+		buf, err := ioutil.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read file %s: %v", path, err)
+		}
+		src, err := imports.Process(path, buf, nil)
+		if err != nil {
+			return fmt.Errorf("format file %s: %v", path, err)
+		}
+		if err := ioutil.WriteFile(path, src, 0644); err != nil {
+			return fmt.Errorf("write file %s: %v", path, err)
+		}
+	}
+
 	return nil
 }
 
 func loadDomain(schemaPath string) (*Domain, error) {
 	// TODO: generate main.go from main.tmpl then run it
-	out, err := run("./intermediate/main.go")
+	out, err := run("./tmp/main.go")
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +112,6 @@ func loadDomain(schemaPath string) (*Domain, error) {
 }
 
 func run(target string) (string, error) {
-	fmt.Println(target)
 	cmd := exec.Command("go", "run", target)
 	stderr := bytes.NewBuffer(nil)
 	stdout := bytes.NewBuffer(nil)
@@ -98,10 +123,8 @@ func run(target string) (string, error) {
 	return stdout.String(), nil
 }
 
-func bindata(path string) (string, error) {
-	o := fmt.Sprintf("-o=%s/internal/bindata/bindata.go", path)
-	dir := fmt.Sprintf("%s/json/...", path)
-	cmd := exec.Command("go", "run", "github.com/go-bindata/go-bindata/go-bindata", o, "-pkg=bindata", dir)
+func bindata(o, pkg, dir string) (string, error) {
+	cmd := exec.Command("go", "run", "github.com/go-bindata/go-bindata/go-bindata", "-o="+o, "-pkg="+pkg, dir)
 	fmt.Println(cmd.Args)
 	stderr := bytes.NewBuffer(nil)
 	stdout := bytes.NewBuffer(nil)

@@ -1,7 +1,7 @@
-// Code generated for package bindata by go-bindata DO NOT EDIT. (@generated)
+// Code generated for package binjson by go-bindata DO NOT EDIT. (@generated)
 // sources:
 // json/user.json
-package bindata
+package binjson
 
 import (
 	"bytes"
@@ -92,7 +92,7 @@ func jsonUserJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "json/user.json", size: 644, mode: os.FileMode(420), modTime: time.Unix(1606009137, 0)}
+	info := bindataFileInfo{name: "json/user.json", size: 644, mode: os.FileMode(420), modTime: time.Unix(1606018789, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

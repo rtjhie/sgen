@@ -11,11 +11,13 @@ import (
 var (
 	templates = template.New("templates")
 	funcs     = template.FuncMap{
-		"snake": snake,
+		"snake":  snake,
+		"camel":  camel,
+		"pascal": pascal,
 	}
 )
 
-func init() {
+func initTemplates() {
 	templates.Funcs(funcs)
 	for _, asset := range bintmpl.AssetNames() {
 		templates = template.Must(templates.Parse(string(bintmpl.MustAsset(asset))))

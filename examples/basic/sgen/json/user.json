@@ -1,20 +1,27 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "type": "object",
-  "properties": {
-    "User": {
-      "type": "object",
-      "properties": {
-        "Name": {
-          "type": "string"
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "address": {
+            "properties": {
+                "street": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
+                },
+                "postalCode": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
         }
-      },
-      "required": [
-        "Name"
-      ]
-    }
-  },
-  "required": [
-    "User"
-  ]
+    },
+    "additionalProperties": false,
+    "type": "object"
 }
