@@ -31,7 +31,6 @@ func Generate(schemaPath string, cfg *Config, options ...Option) (err error) {
 	if err := domain.generate(); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -72,8 +71,8 @@ func (d *Domain) generate() error {
 		return err
 	}
 
-	w := bytes.NewBuffer(nil)
 	for _, s := range d.Schemas {
+		w := bytes.NewBuffer(nil)
 		err = templates.ExecuteTemplate(w, "model", s)
 		if err != nil {
 			return err
@@ -182,5 +181,5 @@ func bindata(o, pkg, dir string) (string, error) {
 
 func filename(pkg string) string {
 	name := strings.Replace(pkg, "/", "_", -1)
-	return fmt.Sprintf("entc_%s_%d", name, time.Now().Unix())
+	return fmt.Sprintf("sgen_%s_%d", name, time.Now().Unix())
 }
